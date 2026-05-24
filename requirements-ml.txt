@@ -1,0 +1,13 @@
+pandas
+numpy
+scikit-learn
+joblib
+pyarrow
+xgboost
+lightgbm
+catboost
+openpyxl
+umap-learn
+pymoo
+torch
+matplotlib

@@ -1,0 +1,59 @@
+{
+  "design_space_n": 18923,
+  "forward_models": {
+    "ND300": {
+      "best_model": "xgboost",
+      "r2": 0.6841508006087686,
+      "rmse": 0.12130654266635477,
+      "mae": 0.038503160144269535
+    },
+    "NUD300": {
+      "best_model": "xgboost",
+      "r2": 0.9042237844016883,
+      "rmse": 5.399040341653992,
+      "mae": 2.015255190523125
+    },
+    "DENSITY": {
+      "best_model": "catboost",
+      "r2": 0.2000746957473727,
+      "rmse": 1.1183119597019313,
+      "mae": 0.3423651642717111
+    },
+    "TG": {
+      "best_model": "xgboost",
+      "r2": 0.8063103884005245,
+      "rmse": 83.06143180104868,
+      "mae": 47.424530269765484
+    }
+  },
+  "nsga_pop": 200,
+  "nsga_gen": 80,
+  "n_pareto": 200,
+  "n_feasible": 41,
+  "max_nd_pred": 2.332822561264038,
+  "n_top20": 20,
+  "distance_threshold_p95": 1.4149476356758968,
+  "oxide_limits_p99": {
+    "TIO2": [
+      0.0,
+      66.02940948486324
+    ],
+    "Bi2O3": [
+      0.0,
+      50.0
+    ],
+    "WO3": [
+      0.0,
+      24.469093399047637
+    ],
+    "R2O3": [
+      0.0,
+      100.0
+    ],
+    "R2O5": [
+      0.0,
+      60.0
+    ]
+  },
+  "output_dir": "C:\\Users\\user\\Documents\\Great_power_great_responsibility\\Ближайшее\\Хакатон\\output\\inverse_design"
+}

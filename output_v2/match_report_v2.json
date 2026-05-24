@@ -1,0 +1,86 @@
+{
+  "sciglass_total": 422949,
+  "baseline_strict_v1": 4474,
+  "pool_sizes": {
+    "strict_mode_b": 4474,
+    "adaptive_mode_b": 20195
+  },
+  "features_mode_a": [
+    "ND300",
+    "NUD300"
+  ],
+  "features_mode_b": [
+    "ND300",
+    "NUD300",
+    "DENSITY",
+    "TG"
+  ],
+  "oxide_columns": [
+    "SIO2",
+    "AL2O3",
+    "B2O3",
+    "CAO",
+    "K2O",
+    "NA2O",
+    "PBO",
+    "Li2O",
+    "MgO",
+    "SRO",
+    "BAO",
+    "ZNO",
+    "P2O5",
+    "GEO2",
+    "ZRO2",
+    "TIO2",
+    "TEO2",
+    "RO",
+    "FemOn",
+    "R2O",
+    "R2O3",
+    "RO2",
+    "RO3",
+    "RO4",
+    "R2O5",
+    "RF",
+    "RF2",
+    "RF3",
+    "RF4",
+    "RF5",
+    "RHal",
+    "RHal2",
+    "RHal3",
+    "RHal4",
+    "RHal5",
+    "RHaln",
+    "RmOn",
+    "RmNn"
+  ],
+  "adaptive_vs_strict_ratio": 4.513857845328565,
+  "output_dir": "C:\\Users\\user\\Documents\\Great_power_great_responsibility\\Ближайшее\\Хакатон\\output_v2",
+  "scenario_summary": [
+    {
+      "label": "adaptive_B",
+      "pool": 20195,
+      "median_uncertainty": 2.0519810684412247,
+      "pct_plausible": 0.819672131147541
+    },
+    {
+      "label": "strict_B",
+      "pool": 4474,
+      "median_uncertainty": 4.432760967687205,
+      "pct_plausible": 0.0
+    },
+    {
+      "label": "adaptive_A",
+      "pool": 20195,
+      "median_uncertainty": 0.7192004553538094,
+      "pct_plausible": 0.0
+    }
+  ],
+  "median_composition_shift": 7.412667059280641,
+  "composition_shift": {
+    "n_glasses": 122,
+    "median": 7.412667059280641,
+    "mean": 8.089818916857235
+  }
+}

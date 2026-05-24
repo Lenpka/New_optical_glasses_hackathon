@@ -1,0 +1,56 @@
+{
+  "n_schott_processed": 122,
+  "pool_adaptive": 20195,
+  "primary_oxide_columns": [
+    "SIO2",
+    "AL2O3",
+    "B2O3",
+    "CAO",
+    "K2O",
+    "NA2O",
+    "PBO",
+    "Li2O",
+    "MgO",
+    "SRO",
+    "BAO",
+    "ZNO",
+    "P2O5",
+    "GEO2",
+    "ZRO2",
+    "TIO2",
+    "TEO2",
+    "RO",
+    "FemOn"
+  ],
+  "mean_distance_attribution_fraction": {
+    "nd": 0.2991263817484675,
+    "vd": 0.2987587586908492,
+    "density": 0.3313660085924711,
+    "tg": 0.3451053389192778
+  },
+  "mean_distance_attribution_percent": {
+    "nd": 23.472739737795706,
+    "vd": 23.443891996908903,
+    "density": 26.00261478836645,
+    "tg": 27.080753476928944
+  },
+  "jaccard_summary": {
+    "median": 0.02564102564102564,
+    "mean": 0.04700586327238074,
+    "pct_stable_gt_0.8": 0.0,
+    "pct_moderate_0.5_0.8": 0.0,
+    "pct_ill_posed_lt_0.3": 99.18032786885246
+  },
+  "plausibility_summary": {
+    "mode_b_best_neighbor_plausible_pct": 10.655737704918032,
+    "mode_b_plausible_ratio_top20_mean": 0.12868852459016394,
+    "mode_b_plausible_ratio_top5_mean": 0.1098360655737705,
+    "mode_a_plausible_ratio_top20_mean": 0.12868852459016394
+  },
+  "local_model_summary": {
+    "median_uncertainty_best_neighbor": 2.3277264971234306,
+    "median_local_pls_cv_mse": 19.034421211926773,
+    "median_local_xgb_cv_mse": 3.8182208270571487
+  },
+  "output_dir": "C:\\Users\\user\\Documents\\Great_power_great_responsibility\\Ближайшее\\Хакатон\\output_v3"
+}

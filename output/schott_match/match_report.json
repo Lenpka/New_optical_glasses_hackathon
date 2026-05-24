@@ -1,0 +1,40 @@
+{
+  "property_mapping": {
+    "SCHOTT.nd": "ND300",
+    "SCHOTT.vd": "NUD300",
+    "SCHOTT.density": "DENSITY",
+    "SCHOTT.tg": "TG"
+  },
+  "features_used": [
+    "ND300",
+    "NUD300",
+    "DENSITY",
+    "TG"
+  ],
+  "schott_raw_rows": 122,
+  "schott_after_clean": 122,
+  "sciglass_raw_rows": 422949,
+  "sciglass_after_clean": 4474,
+  "oxide_columns": [
+    "SIO2",
+    "AL2O3",
+    "B2O3",
+    "CAO",
+    "K2O",
+    "NA2O",
+    "PBO",
+    "Li2O",
+    "MgO",
+    "SRO",
+    "BAO",
+    "ZNO",
+    "P2O5",
+    "GEO2",
+    "ZRO2",
+    "TIO2",
+    "TEO2",
+    "RO",
+    "FemOn"
+  ],
+  "k_neighbors": 20
+}
