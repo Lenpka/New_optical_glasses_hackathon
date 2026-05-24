@@ -1,0 +1,28 @@
+{
+  "epochs": 400,
+  "score_only": true,
+  "nd_min": 1.7000000476837158,
+  "nd_max": 2.9779999256134033,
+  "nud_min": 7.940000057220459,
+  "nud_max": 230.6999969482422,
+  "n_generated": 4980,
+  "n_feasible": 2010,
+  "max_nd_pred": 2.169919729232788,
+  "nd_targets": [
+    1.8,
+    1.85,
+    1.9,
+    1.95,
+    2.0,
+    2.05
+  ],
+  "nud_targets": [
+    18.0,
+    22.0,
+    26.0,
+    30.0,
+    35.0
+  ],
+  "forward_models_dir": "C:\\Users\\user\\Documents\\Great_power_great_responsibility\\Ближайшее\\Хакатон\\output\\inverse_design_2h\\forward_models",
+  "output_dir": "C:\\Users\\user\\Documents\\Great_power_great_responsibility\\Ближайшее\\Хакатон\\output\\gan_design"
+}

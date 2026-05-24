@@ -380,6 +380,11 @@ def main() -> None:
     parser.add_argument("--batch-size", type=int, default=256)
     parser.add_argument("--n-generate", type=int, default=3000, help="Всего генераций (делится по целям)")
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument(
+        "--score-only",
+        action="store_true",
+        help="Только scoring уже сгенерированных (checkpoints + gan_raw_generated.csv)",
+    )
     args = parser.parse_args()
 
     setup_logging()
@@ -390,35 +395,48 @@ def main() -> None:
     oxide_cols = oxide_columns(df)
     design_df = filter_design_space(df, oxide_cols)
 
-    X, C, cond_stats = prepare_training_tensors(design_df, oxide_cols)
-    (args.output / "condition_stats.json").write_text(
-        json.dumps(cond_stats, indent=2), encoding="utf-8",
-    )
+    cond_path = args.output / "condition_stats.json"
+    if cond_path.exists():
+        cond_stats = json.loads(cond_path.read_text(encoding="utf-8"))
+    else:
+        _, _, cond_stats = prepare_training_tensors(design_df, oxide_cols)
+        cond_path.write_text(json.dumps(cond_stats, indent=2), encoding="utf-8")
 
-    G, train_stats = train_cwgan_gp(
-        X, C, oxide_cols, args.output,
-        epochs=args.epochs,
-        batch_size=args.batch_size,
-        seed=args.seed,
-    )
-
+    train_stats: dict[str, Any] = {"epochs": args.epochs, "score_only": args.score_only}
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     pbo_idx = oxide_cols.index("PBO") if "PBO" in oxide_cols else None
     G = Generator(len(oxide_cols), pbo_idx).to(device)
-    G.load_state_dict(torch.load(args.output / "checkpoints" / "generator.pt", map_location=device))
+
+    if args.score_only:
+        G.load_state_dict(torch.load(args.output / "checkpoints" / "generator.pt", map_location=device))
+        raw_path = args.output / "gan_raw_generated.csv"
+        if not raw_path.exists():
+            raise FileNotFoundError(f"Нет {raw_path} — сначала запустите полный пайплайн")
+        generated = pd.read_csv(raw_path)
+        logger.info("Score-only: %s сгенерированных составов", len(generated))
+    else:
+        X, C, cond_stats = prepare_training_tensors(design_df, oxide_cols)
+        cond_path.write_text(json.dumps(cond_stats, indent=2), encoding="utf-8")
+        G, train_stats = train_cwgan_gp(
+            X, C, oxide_cols, args.output,
+            epochs=args.epochs,
+            batch_size=args.batch_size,
+            seed=args.seed,
+        )
+        G.load_state_dict(torch.load(args.output / "checkpoints" / "generator.pt", map_location=device))
 
     nd_targets = [1.80, 1.85, 1.90, 1.95, 2.00, 2.05]
     nud_targets = [18.0, 22.0, 26.0, 30.0, 35.0]
-    n_per = max(1, args.n_generate // (len(nd_targets) * len(nud_targets)))
-
-    generated = generate_compositions(
-        G, cond_stats, oxide_cols,
-        nd_targets=nd_targets,
-        nud_targets=nud_targets,
-        n_per_target=n_per,
-        device=device,
-    )
-    generated.to_csv(args.output / "gan_raw_generated.csv", index=False)
+    if not args.score_only:
+        n_per = max(1, args.n_generate // (len(nd_targets) * len(nud_targets)))
+        generated = generate_compositions(
+            G, cond_stats, oxide_cols,
+            nd_targets=nd_targets,
+            nud_targets=nud_targets,
+            n_per_target=n_per,
+            device=device,
+        )
+        generated.to_csv(args.output / "gan_raw_generated.csv", index=False)
 
     models = load_forward_models(args.forward_models, oxide_cols)
     _, _, dist_threshold = build_distance_model(design_df, oxide_cols)
@@ -453,7 +471,8 @@ def main() -> None:
     print("\n" + "=" * 60)
     print("cWGAN-GP — готово")
     print("=" * 60)
-    print(f"  Обучено на {len(X):,} составах (ND>1.70, PbO<=1)")
+    n_train = cond_stats.get("n_samples", "—")
+    print(f"  Обучающая выборка: {n_train} составов (ND>1.70, PbO<=1)")
     print(f"  Epochs: {args.epochs}, feasible: {report['n_feasible']}")
     print(f"  Max ND_pred: {report['max_nd_pred']}")
     print(f"  Выход: {args.output}")
