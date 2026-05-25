@@ -578,28 +578,14 @@ def select_top20(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def plot_pareto(candidates: pd.DataFrame, output_dir: Path) -> None:
+    from viz_presentation import plot_pareto_candidates
+
     fig_dir = output_dir / "figures"
     fig_dir.mkdir(parents=True, exist_ok=True)
     if not len(candidates):
         return
-    fig, ax = plt.subplots(figsize=(8, 6))
-    sc = ax.scatter(
-        candidates["ND300_pred"],
-        candidates["NUD300_pred"],
-        c=candidates["distance_to_training"],
-        cmap="viridis_r",
-        s=30,
-        alpha=0.7,
-    )
-    ax.axvline(1.80, color="red", ls="--", lw=1, label="n_d=1.80")
-    ax.set_xlabel("ND300_pred")
-    ax.set_ylabel("NUD300_pred")
-    ax.set_title("Pareto-кандидаты (цвет = distance_to_training)")
-    plt.colorbar(sc, ax=ax, label="distance")
-    ax.legend()
-    fig.tight_layout()
-    fig.savefig(fig_dir / "pareto_nd_vd.png", dpi=150)
-    plt.close(fig)
+    top20 = select_top20(candidates)
+    plot_pareto_candidates(candidates, top20, fig_dir / "pareto_nd_vd.png")
 
 
 def print_report(report: dict[str, Any]) -> None:

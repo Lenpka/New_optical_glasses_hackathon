@@ -4,5 +4,9 @@
   "median_dist_nd_lt_1.8": null,
   "median_dist_nd_ge_1.8": 1.3350248940997604,
   "median_unc_recovery_nd_lt_1.8": 2.373081160319486,
-  "median_unc_recovery_nd_ge_1.8": 1.91480754679695
+  "median_unc_recovery_nd_ge_1.8": 1.91480754679695,
+  "top10_dist_range": [
+    0.25,
+    1.85
+  ]
 }

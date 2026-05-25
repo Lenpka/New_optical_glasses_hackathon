@@ -27,12 +27,15 @@ from scipy.stats import kurtosis, linregress, pearsonr, skew
 
 __all__ = [
     "FEATURE_SET_LABELS",
+    "INVERSE_RECOVERY_DESIGN_PROPERTIES",
     "MODEL_LABELS",
     "MODEL_ORDER",
     "configure_theme",
     "format_axis_label",
+    "load_inverse_design_property_datasets",
     "plot_boxplot",
     "plot_distribution",
+    "plot_inverse_recovery_design_distributions",
     "plot_metrics_comparison",
     "plot_model_comparison_suite",
     "plot_parity",
@@ -943,6 +946,321 @@ def plot_model_comparison_suite(
     saved["parity_global_best"] = p
 
     return saved
+
+
+# --- Inverse recovery (v3) и inverse design: общие свойства ---
+INVERSE_RECOVERY_DESIGN_PROPERTIES: list[dict[str, Any]] = [
+    {
+        "key": "nd",
+        "label": r"Показатель преломления $n_d$",
+        "unit": "",
+        "merged_col": "RefractiveIndex",
+        "sciglass_col": "ND300",
+        "schott_col": "nd",
+        "mode_a": True,
+        "mode_b": True,
+    },
+    {
+        "key": "vd",
+        "label": r"Число Аббе $\nu_d$",
+        "unit": "",
+        "merged_col": "AbbeNum",
+        "sciglass_col": "NUD300",
+        "schott_col": "vd",
+        "mode_a": True,
+        "mode_b": True,
+    },
+    {
+        "key": "density",
+        "label": r"Плотность $\rho$",
+        "unit": "кг/м³",
+        "merged_col": "Density293K",
+        "sciglass_col": "DENSITY",
+        "schott_col": "density",
+        "mode_a": False,
+        "mode_b": True,
+    },
+    {
+        "key": "tg",
+        "label": r"$T_g$",
+        "unit": "°C",
+        "merged_col": "Tg",
+        "sciglass_col": "TG",
+        "schott_col": "tg",
+        "mode_a": False,
+        "mode_b": True,
+    },
+]
+
+_INVERSE_DATASET_STYLE: dict[str, dict[str, Any]] = {
+    "design": {
+        "label": "Design (ND>1.70, PbO≤1)",
+        "color": "#0072B2",
+        "order": 1,
+    },
+    "recovery_pool": {
+        "label": "Recovery pool (SciGlass, adaptive, 4 свойства)",
+        "color": "#44AA99",
+        "order": 2,
+    },
+    "schott": {
+        "label": "SCHOTT (каталог, 122)",
+        "color": "#D55E00",
+        "order": 3,
+    },
+}
+
+
+def load_inverse_design_property_datasets(
+    *,
+    data_path: Optional[Path] = None,
+    sciglass_zip: Optional[Path] = None,
+    schott_xlsx: Optional[Path] = None,
+) -> tuple[dict[str, pd.DataFrame], dict[str, int]]:
+    """Загрузить выборки design / recovery / SCHOTT с унифицированными колонками свойств.
+
+    Returns:
+        datasets: ключи design, recovery_pool, schott — DataFrame с колонками nd, vd, density, tg.
+        counts: число строк в каждой выборке.
+    """
+    from inverse_glass_design import (
+        DEFAULT_DATA,
+        filter_design_space,
+        load_sciglass_df,
+        oxide_columns,
+    )
+    from match_schott_sciglass import DEFAULT_SCHOTT_XLSX, DEFAULT_SCIGLASS_ZIP, load_schott_catalog
+    from match_schott_sciglass_v2 import (
+        FEATURES_MODE_B,
+        filter_sciglass_pool,
+        load_sciglass_extended,
+    )
+
+    data_path = data_path or DEFAULT_DATA
+    sciglass_zip = sciglass_zip or DEFAULT_SCIGLASS_ZIP
+    schott_xlsx = schott_xlsx or DEFAULT_SCHOTT_XLSX
+
+    def _frame_from_source(df: pd.DataFrame, col_key: str) -> pd.DataFrame:
+        out = pd.DataFrame(index=df.index)
+        for spec in INVERSE_RECOVERY_DESIGN_PROPERTIES:
+            col = spec[col_key]
+            if col and col in df.columns:
+                out[spec["key"]] = pd.to_numeric(df[col], errors="coerce")
+        return out
+
+    merged = load_sciglass_df(data_path)
+    oxide_cols = oxide_columns(merged)
+    design_raw = filter_design_space(merged, oxide_cols)
+    design = _frame_from_source(design_raw, "merged_col")
+
+    sciglass = load_sciglass_extended(sciglass_zip)
+    pool, _ = filter_sciglass_pool(sciglass, FEATURES_MODE_B, "adaptive")
+    recovery = _frame_from_source(pool, "sciglass_col")
+
+    schott_raw = load_schott_catalog(schott_xlsx)
+    schott = _frame_from_source(schott_raw, "schott_col")
+
+    datasets = {"design": design, "recovery_pool": recovery, "schott": schott}
+    counts = {k: len(v) for k, v in datasets.items()}
+    return datasets, counts
+
+
+def _series_for_property(
+    datasets: dict[str, pd.DataFrame],
+    prop_key: str,
+) -> dict[str, pd.Series]:
+    out: dict[str, pd.Series] = {}
+    for name, df in datasets.items():
+        if prop_key in df.columns:
+            s = df[prop_key].dropna()
+            if len(s):
+                out[name] = s
+    return out
+
+
+def plot_inverse_recovery_design_distributions(
+    datasets: Optional[dict[str, pd.DataFrame]] = None,
+    *,
+    output_dir: Optional[Union[str, Path]] = None,
+    data_path: Optional[Path] = None,
+    sciglass_zip: Optional[Path] = None,
+    schott_xlsx: Optional[Path] = None,
+    bins: int = 45,
+    show: bool = False,
+    dpi: int = 180,
+) -> dict[str, Path]:
+    """Распределения n_d, ν_d, ρ, T_g для design и recovery (MODE_B) + каталог SCHOTT.
+
+    Сохраняет:
+      - property_distributions_overlay.png — 2×2 наложенные гистограммы+KDE
+      - property_distributions_boxplot.png — сравнение boxplot по выборкам
+      - property_distributions_stats.csv — описательная статистика
+    """
+    if datasets is None:
+        datasets, _ = load_inverse_design_property_datasets(
+            data_path=data_path,
+            sciglass_zip=sciglass_zip,
+            schott_xlsx=schott_xlsx,
+        )
+
+    out_dir = Path(output_dir or Path(__file__).resolve().parent / "output" / "property_distributions")
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    stats_rows: list[dict[str, Any]] = []
+
+    # --- 2×2 overlay ---
+    fig, axes = plt.subplots(2, 2, figsize=(15, 11))
+    axes_flat = axes.flatten()
+
+    for ax, spec in zip(axes_flat, INVERSE_RECOVERY_DESIGN_PROPERTIES):
+        key = spec["key"]
+        by_ds = _series_for_property(datasets, key)
+        for ds_name in sorted(by_ds.keys(), key=lambda n: _INVERSE_DATASET_STYLE[n]["order"]):
+            x = by_ds[ds_name]
+            style = _INVERSE_DATASET_STYLE[ds_name]
+            sns.histplot(
+                x,
+                bins=bins,
+                stat="density",
+                element="step",
+                fill=True,
+                alpha=0.22,
+                color=style["color"],
+                label=f"{style['label']} (n={len(x):,})",
+                ax=ax,
+                linewidth=1.4,
+            )
+            sns.kdeplot(x, color=style["color"], linewidth=2.0, ax=ax, alpha=0.9)
+            st = _descriptive_stats(x)
+            stats_rows.append(
+                {
+                    "property": key,
+                    "dataset": ds_name,
+                    **{k: st[k] for k in ("count", "mean", "std", "median", "q25", "q75", "min", "max")},
+                }
+            )
+
+        mode_note = "MODE_A+B" if spec["mode_a"] and spec["mode_b"] else "MODE_B"
+        ax.set_title(f"{spec['label']}  [{mode_note}]", fontsize=16, pad=8)
+        ax.set_xlabel(format_axis_label(spec["label"], spec["unit"] or None), fontsize=13)
+        ax.set_ylabel("Плотность", fontsize=13)
+        ax.legend(loc="upper right", fontsize=9, framealpha=0.92)
+        ax.grid(True, alpha=0.25, linestyle="--")
+        if key == "nd":
+            ax.axvline(1.80, color="#882255", ls=(0, (5, 4)), lw=1.8, label=r"$n_d$=1.80")
+
+    fig.suptitle(
+        "Распределения свойств: inverse design и recovery (SciGlass)",
+        fontsize=18,
+        fontweight="bold",
+        y=1.01,
+    )
+    fig.tight_layout()
+    p_overlay = out_dir / "property_distributions_overlay.png"
+    fig.savefig(p_overlay, dpi=dpi, bbox_inches="tight", facecolor="white")
+    if not show:
+        plt.close(fig)
+
+    # --- Boxplot long form ---
+    long_rows: list[dict[str, Any]] = []
+    for ds_name, df in datasets.items():
+        for spec in INVERSE_RECOVERY_DESIGN_PROPERTIES:
+            key = spec["key"]
+            if key not in df.columns:
+                continue
+            for v in df[key].dropna():
+                long_rows.append(
+                    {
+                        "dataset": _INVERSE_DATASET_STYLE[ds_name]["label"],
+                        "dataset_key": ds_name,
+                        "property": spec["label"],
+                        "property_key": key,
+                        "value": float(v),
+                    }
+                )
+    long_df = pd.DataFrame(long_rows)
+
+    fig2, axes2 = plt.subplots(2, 2, figsize=(15, 11))
+    for ax, spec in zip(axes2.flatten(), INVERSE_RECOVERY_DESIGN_PROPERTIES):
+        sub = long_df[long_df["property_key"] == spec["key"]]
+        if sub.empty:
+            ax.set_visible(False)
+            continue
+        order = [
+            _INVERSE_DATASET_STYLE[k]["label"]
+            for k in sorted(_INVERSE_DATASET_STYLE.keys(), key=lambda n: _INVERSE_DATASET_STYLE[n]["order"])
+            if k in sub["dataset_key"].unique()
+        ]
+        palette = {
+            _INVERSE_DATASET_STYLE[k]["label"]: _INVERSE_DATASET_STYLE[k]["color"]
+            for k in _INVERSE_DATASET_STYLE
+        }
+        sns.boxplot(
+            data=sub,
+            x="dataset",
+            y="value",
+            hue="dataset",
+            order=order,
+            palette=palette,
+            ax=ax,
+            width=0.55,
+            fliersize=3,
+            dodge=False,
+            legend=False,
+        )
+        if spec["key"] == "nd":
+            ax.axhline(1.80, color="#882255", ls=":", lw=1.5)
+        ax.set_title(spec["label"], fontsize=16)
+        ax.set_xlabel("")
+        ax.set_ylabel(format_axis_label("Значение", spec["unit"] or None), fontsize=12)
+        ax.tick_params(axis="x", rotation=18, labelsize=10)
+        ax.grid(True, axis="y", alpha=0.25)
+
+    fig2.suptitle("Сравнение выборок (boxplot)", fontsize=18, fontweight="bold", y=1.01)
+    fig2.tight_layout()
+    p_box = out_dir / "property_distributions_boxplot.png"
+    fig2.savefig(p_box, dpi=dpi, bbox_inches="tight", facecolor="white")
+    if not show:
+        plt.close(fig2)
+
+    # --- отдельные полноразмерные распределения (design) ---
+    saved_single: dict[str, Path] = {}
+    design_df = datasets.get("design")
+    if design_df is not None:
+        single_dir = out_dir / "by_property"
+        single_dir.mkdir(exist_ok=True)
+        for spec in INVERSE_RECOVERY_DESIGN_PROPERTIES:
+            key = spec["key"]
+            if key not in design_df.columns:
+                continue
+            p = single_dir / f"design_{key}_distribution.png"
+            plot_distribution(
+                design_df,
+                key,
+                title=f"Design space: {spec['label']}",
+                xlabel=spec["label"],
+                xlabel_unit=spec["unit"] or None,
+                bins=bins,
+                figsize=(12, 8),
+                show=False,
+            )
+            plt.gcf().savefig(p, dpi=dpi, bbox_inches="tight", facecolor="white")
+            plt.close(plt.gcf())
+            saved_single[f"design_{key}"] = p
+
+    stats_df = pd.DataFrame(stats_rows)
+    p_stats = out_dir / "property_distributions_stats.csv"
+    stats_df.to_csv(p_stats, index=False, encoding="utf-8-sig")
+
+    result = {
+        "overlay": p_overlay,
+        "boxplot": p_box,
+        "stats_csv": p_stats,
+        **saved_single,
+    }
+    if show:
+        plt.show()
+    return result
 
 
 configure_theme()

@@ -1,0 +1,233 @@
+{
+  "query": {
+    "label": "user_query",
+    "nd": 1.85,
+    "vd": 25.0,
+    "density": 3.539999961853028,
+    "tg": 520.0,
+    "density_input": null,
+    "tg_input": null,
+    "imputed_fields": [
+      "density",
+      "tg"
+    ]
+  },
+  "primary_composition": "SIO2=36.88; B2O3=1.42; K2O=2.55; NA2O=11.91; Li2O=11.35; BAO=0.71; ZNO=7.80; ZRO2=1.13; TIO2=11.35; RO=8.79",
+  "composition_source": "best_neighbor_mode_b",
+  "matched_sciglass_id": 3863900458177,
+  "distance_first": 0.0285019319142458,
+  "distance_mean_topk": 0.0410061357888464,
+  "jaccard_topk": 0.02564102564102564,
+  "jaccard_label": "ill_posed",
+  "uncertainty_score": 0.3391481283718149,
+  "composition_variance_neighbors": 8.270667836593924,
+  "best_neighbor_plausible": false,
+  "plausible_ratio_topk": 0.05,
+  "composition_pls": "SIO2=41.92; B2O3=3.09; K2O=2.57; NA2O=11.68; Li2O=16.45; BAO=2.34; ZNO=2.06; ZRO2=1.42; TIO2=12.93; RO=4.94",
+  "composition_xgb": "SIO2=46.26; B2O3=1.46; K2O=0.90; NA2O=13.67; Li2O=8.69; BAO=1.62; ZNO=5.77; ZRO2=0.62; TIO2=13.85; RO=6.49",
+  "local_pls_cv_mse": 4.79116121638696,
+  "local_xgb_cv_mse": 1.0731928813128206,
+  "disclaimer": "Состав взят из реальной записи SciGlass (ближайший сосед). Локальные модели PLS/XGB — вспомогательная оценка, не синтез стекла.",
+  "neighbors": [
+    {
+      "rank": 1,
+      "sciglass_id": 3863900458177,
+      "distance": 0.0285019319142458,
+      "composition": "SIO2=36.88; B2O3=1.42; K2O=2.55; NA2O=11.91; Li2O=11.35; BAO=0.71; ZNO=7.80; ZRO2=1.13; TIO2=11.35; RO=8.79",
+      "plausible": false,
+      "in_mode_a_topk": false,
+      "nd": 1.8420000076293943,
+      "vd": 25.059999465942383
+    },
+    {
+      "rank": 2,
+      "sciglass_id": 3918800463215,
+      "distance": 0.02882097617214059,
+      "composition": "SIO2=34.79; B2O3=5.54; CAO=0.65; K2O=5.12; NA2O=10.79; Li2O=10.79; BAO=1.41; ZRO2=2.04; TIO2=11.05; RO=2.06",
+      "plausible": false,
+      "in_mode_a_topk": false,
+      "nd": 1.8420000076293943,
+      "vd": 24.61000061035156
+    },
+    {
+      "rank": 3,
+      "sciglass_id": 3863900458176,
+      "distance": 0.03454384436531751,
+      "composition": "SIO2=37.09; B2O3=1.43; K2O=2.85; NA2O=11.98; Li2O=11.41; BAO=0.71; ZNO=7.85; TIO2=11.41; RO=8.84",
+      "plausible": false,
+      "in_mode_a_topk": false,
+      "nd": 1.840999960899353,
+      "vd": 24.959999084472656
+    },
+    {
+      "rank": 4,
+      "sciglass_id": 3918800463180,
+      "distance": 0.03694782652314104,
+      "composition": "SIO2=35.43; B2O3=8.02; CAO=0.56; K2O=1.67; NA2O=10.94; Li2O=10.94; BAO=1.92; ZNO=2.19; ZRO2=2.48; TIO2=9.08; RO=4.67",
+      "plausible": false,
+      "in_mode_a_topk": false,
+      "nd": 1.838000059127808,
+      "vd": 25.149999618530277
+    },
+    {
+      "rank": 5,
+      "sciglass_id": 3918800463179,
+      "distance": 0.03736506414184185,
+      "composition": "SIO2=36.03; B2O3=7.63; CAO=0.56; K2O=1.67; NA2O=10.90; Li2O=10.90; BAO=1.92; ZNO=2.18; ZRO2=2.47; TIO2=9.05; RO=4.65",
+      "plausible": false,
+      "in_mode_a_topk": false,
+      "nd": 1.837000012397766,
+      "vd": 25.200000762939453
+    },
+    {
+      "rank": 6,
+      "sciglass_id": 3918800463218,
+      "distance": 0.037467756394942986,
+      "composition": "SIO2=32.69; B2O3=7.61; K2O=6.41; NA2O=10.13; Li2O=10.13; BAO=1.31; ZRO2=2.72; TIO2=10.95; RO=1.31",
+      "plausible": false,
+      "in_mode_a_topk": false,
+      "nd": 1.8420000076293943,
+      "vd": 24.43000030517578
+    },
+    {
+      "rank": 7,
+      "sciglass_id": 3918800463219,
+      "distance": 0.038884138510418026,
+      "composition": "SIO2=32.85; B2O3=6.84; K2O=6.44; NA2O=10.18; Li2O=10.18; BAO=1.32; ZRO2=2.74; TIO2=11.24; RO=1.32",
+      "plausible": false,
+      "in_mode_a_topk": false,
+      "nd": 1.843999981880188,
+      "vd": 24.399999618530277
+    },
+    {
+      "rank": 8,
+      "sciglass_id": 3768700445669,
+      "distance": 0.03914254261785352,
+      "composition": "SIO2=38.42; NA2O=8.24; Li2O=25.63; ZRO2=1.05; TIO2=6.26",
+      "plausible": false,
+      "in_mode_a_topk": false,
+      "nd": 1.8530000448226929,
+      "vd": 25.600000381469727
+    },
+    {
+      "rank": 9,
+      "sciglass_id": 3918800463229,
+      "distance": 0.03953418549107452,
+      "composition": "SIO2=35.12; B2O3=3.87; K2O=6.88; NA2O=10.89; Li2O=10.89; BAO=1.41; ZRO2=1.20; TIO2=11.75; RO=1.41",
+      "plausible": false,
+      "in_mode_a_topk": false,
+      "nd": 1.838000059127808,
+      "vd": 24.63999938964844
+    },
+    {
+      "rank": 10,
+      "sciglass_id": 3548300426196,
+      "distance": 0.0399630707242247,
+      "composition": "SIO2=33.19; B2O3=29.84; K2O=8.82; P2O5=0.59; TIO2=26.00",
+      "plausible": true,
+      "in_mode_a_topk": false,
+      "nd": 1.83899998664856,
+      "vd": 25.299999237060547
+    },
+    {
+      "rank": 11,
+      "sciglass_id": 3918800463211,
+      "distance": 0.04007753069411583,
+      "composition": "SIO2=33.65; B2O3=5.36; CAO=0.62; K2O=6.60; NA2O=10.44; Li2O=10.44; BAO=1.35; ZRO2=3.63; TIO2=10.69; RO=1.97",
+      "plausible": false,
+      "in_mode_a_topk": false,
+      "nd": 1.8359999656677248,
+      "vd": 25.06999969482422
+    },
+    {
+      "rank": 12,
+      "sciglass_id": 3918800463174,
+      "distance": 0.04018885073673347,
+      "composition": "SIO2=36.63; B2O3=7.24; CAO=0.55; K2O=1.66; NA2O=10.86; Li2O=10.86; BAO=1.91; ZNO=2.17; ZRO2=2.46; TIO2=9.01; RO=4.64",
+      "plausible": false,
+      "in_mode_a_topk": false,
+      "nd": 1.8359999656677248,
+      "vd": 25.26000022888184
+    },
+    {
+      "rank": 13,
+      "sciglass_id": 3918800463216,
+      "distance": 0.04061464364923918,
+      "composition": "SIO2=37.01; B2O3=4.08; CAO=0.68; K2O=3.63; NA2O=11.47; Li2O=11.47; BAO=1.48; ZRO2=1.27; TIO2=11.76; RO=2.17",
+      "plausible": false,
+      "in_mode_a_topk": false,
+      "nd": 1.83899998664856,
+      "vd": 24.71999931335449
+    },
+    {
+      "rank": 14,
+      "sciglass_id": 3918800463175,
+      "distance": 0.046538170929643095,
+      "composition": "SIO2=32.98; B2O3=7.74; CAO=0.59; K2O=1.78; NA2O=11.61; Li2O=11.61; BAO=2.05; ZNO=2.33; ZRO2=2.64; TIO2=9.03; RO=4.97",
+      "plausible": false,
+      "in_mode_a_topk": false,
+      "nd": 1.8459999561309812,
+      "vd": 25.040000915527344
+    },
+    {
+      "rank": 15,
+      "sciglass_id": 3918800463176,
+      "distance": 0.046868169409397004,
+      "composition": "SIO2=33.00; B2O3=9.62; CAO=0.57; K2O=1.70; NA2O=11.10; Li2O=11.10; BAO=1.95; ZNO=2.22; ZRO2=2.52; TIO2=9.21; RO=4.74",
+      "plausible": false,
+      "in_mode_a_topk": false,
+      "nd": 1.8420000076293943,
+      "vd": 25.020000457763672
+    },
+    {
+      "rank": 16,
+      "sciglass_id": 3548700426257,
+      "distance": 0.047597368440346025,
+      "composition": "SIO2=34.45; AL2O3=0.97; B2O3=1.18; K2O=2.96; NA2O=9.54; Li2O=4.12; MgO=5.30; BAO=8.84; TIO2=26.01; RO=14.14",
+      "plausible": false,
+      "in_mode_a_topk": false,
+      "nd": 1.8420000076293943,
+      "vd": 24.0
+    },
+    {
+      "rank": 17,
+      "sciglass_id": 3548700426251,
+      "distance": 0.04830667312005507,
+      "composition": "SIO2=42.61; NA2O=12.80; BAO=10.29; TIO2=27.08; RO=10.29",
+      "plausible": false,
+      "in_mode_a_topk": false,
+      "nd": 1.847000002861023,
+      "vd": 23.799999237060547
+    },
+    {
+      "rank": 18,
+      "sciglass_id": 3863900458146,
+      "distance": 0.04851645971247715,
+      "composition": "SIO2=34.80; B2O3=4.26; CAO=0.57; K2O=2.84; NA2O=9.45; Li2O=10.66; BAO=1.99; ZNO=7.81; ZRO2=0.64; TIO2=11.37; RO=10.37",
+      "plausible": false,
+      "in_mode_a_topk": false,
+      "nd": 1.847000002861023,
+      "vd": 24.899999618530277
+    },
+    {
+      "rank": 19,
+      "sciglass_id": 3863900458150,
+      "distance": 0.04970302046931355,
+      "composition": "SIO2=34.39; B2O3=4.65; CAO=0.54; K2O=1.79; NA2O=10.60; Li2O=10.74; BAO=1.89; ZNO=7.87; ZRO2=0.64; TIO2=11.10; RO=10.30",
+      "plausible": false,
+      "in_mode_a_topk": false,
+      "nd": 1.850000023841858,
+      "vd": 24.8700008392334
+    },
+    {
+      "rank": 20,
+      "sciglass_id": 3918800463198,
+      "distance": 0.050540491760407126,
+      "composition": "SIO2=31.81; B2O3=8.19; CAO=0.59; K2O=6.23; NA2O=9.87; Li2O=9.87; BAO=1.28; ZNO=1.56; ZRO2=2.66; TIO2=10.10; RO=3.42",
+      "plausible": false,
+      "in_mode_a_topk": false,
+      "nd": 1.840000033378601,
+      "vd": 24.739999771118164
+    }
+  ]
+}

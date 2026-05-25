@@ -11,3 +11,4 @@ umap-learn
 pymoo
 torch
 matplotlib
+streamlit>=1.28

@@ -234,6 +234,7 @@ def find_neighbors(
     pool: pd.DataFrame,
     feature_list: list[str],
     z_params: dict[str, tuple[float, float]],
+    k: int = K_NEIGHBORS,
 ) -> pd.DataFrame:
     dist, _ = adaptive_distance_matrix(
         schott_props,
@@ -242,7 +243,177 @@ def find_neighbors(
         z_params,
         n_target=len(FEATURES_MODE_B),
     )
-    return pick_top_neighbors(pool, dist, K_NEIGHBORS)
+    return pick_top_neighbors(pool, dist, k)
+
+
+def _properties_to_query_series(
+    nd: float,
+    vd: float,
+    density: float | None,
+    tg: float | None,
+    pool: pd.DataFrame,
+) -> tuple[pd.Series, pd.Series, list[str]]:
+    """Свойства запроса в формате SciGlass; при отсутствии ρ/Tg — медиана пула."""
+    imputed: list[str] = []
+    d_val = density
+    t_val = tg
+    if d_val is None or (isinstance(d_val, float) and np.isnan(d_val)):
+        d_val = float(pool["DENSITY"].median())
+        imputed.append("density")
+    if t_val is None or (isinstance(t_val, float) and np.isnan(t_val)):
+        t_val = float(pool["TG"].median())
+        imputed.append("tg")
+
+    props_a = pd.Series({"ND300": nd, "NUD300": vd})
+    props_b = pd.Series({"ND300": nd, "NUD300": vd, "DENSITY": d_val, "TG": t_val})
+    return props_a, props_b, imputed
+
+
+def recover_from_properties(
+    nd: float,
+    vd: float,
+    *,
+    density: float | None = None,
+    tg: float | None = None,
+    label: str = "user_query",
+    sciglass_zip: Path = DEFAULT_SCIGLASS_ZIP,
+    k_neighbors: int = K_NEIGHBORS,
+    use_gpr: bool = False,
+) -> dict[str, Any]:
+    """Восстановить состав по целевым свойствам (реальные соседи SciGlass, без усреднения).
+
+    Возвращает словарь с основным составом (лучший сосед MODE_B), соседями, Jaccard и uncertainty.
+    """
+    sciglass = load_sciglass_extended(sciglass_zip)
+    primary = [c for c in OXIDE_MOL_COLS if c in sciglass.columns]
+    oxide_cols = all_oxide_columns(sciglass.columns.tolist())
+    pool, _ = filter_sciglass_pool(sciglass, FEATURES_MODE_B, "adaptive")
+    z_a = fit_zscore_params(pool, FEATURES_MODE_A)
+    z_b = fit_zscore_params(pool, FEATURES_MODE_B)
+
+    pa, pb, imputed = _properties_to_query_series(nd, vd, density, tg, pool)
+    name = label
+
+    na = find_neighbors(name, pa, pool, FEATURES_MODE_A, z_a, k=k_neighbors)
+    nb = find_neighbors(name, pb, pool, FEATURES_MODE_B, z_b, k=k_neighbors)
+    if na.empty or nb.empty:
+        raise ValueError("Не найдены соседи в SciGlass для заданных свойств")
+
+    ids_a = set(na["sciglass_id"].astype(int))
+    ids_b = set(nb["sciglass_id"].astype(int))
+    j = jaccard_topk(ids_a, ids_b)
+    pl_b = neighbor_plausibility_metrics(nb, primary)
+
+    best = nb.iloc[0]
+    best_comp = primary_composition_row(best, primary)
+
+    X = np.column_stack([
+        z_transform(nb[c].fillna(z_b[c][0]).to_numpy(), *z_b[c]) for c in FEATURES_MODE_B
+    ])
+    Y = nb[primary].fillna(0).to_numpy()
+    xq = np.array([z_transform(float(pb[c]), *z_b[c]) for c in FEATURES_MODE_B])
+    comp_pls, err_pls = fit_local_pls(X, Y, xq)
+    comp_xgb, err_xgb = fit_local_xgb(X, Y, xq)
+    if use_gpr:
+        comp_gpr, err_gpr = fit_local_gpr(X, Y, xq)
+    else:
+        comp_gpr, err_gpr = comp_pls.copy(), np.nan
+
+    d_nb = nb["_distance"].to_numpy()
+    comp_var = composition_variance(nb, primary)
+    unc = comp_var * float(np.mean(d_nb))
+
+    neighbors_table = []
+    for rank, (_, nrow) in enumerate(nb.iterrows(), start=1):
+        comp_row = primary_composition_row(nrow, primary)
+        neighbors_table.append({
+            "rank": rank,
+            "sciglass_id": int(nrow["sciglass_id"]),
+            "distance": float(nrow["_distance"]),
+            "composition": comp_to_str(comp_row),
+            "plausible": is_primary_plausible(nrow, primary),
+            "in_mode_a_topk": int(nrow["sciglass_id"]) in ids_a,
+            "nd": float(nrow["ND300"]) if pd.notna(nrow.get("ND300")) else None,
+            "vd": float(nrow["NUD300"]) if pd.notna(nrow.get("NUD300")) else None,
+        })
+
+    return {
+        "query": {
+            "label": label,
+            "nd": nd,
+            "vd": vd,
+            "density": float(pb["DENSITY"]),
+            "tg": float(pb["TG"]),
+            "density_input": density,
+            "tg_input": tg,
+            "imputed_fields": imputed,
+        },
+        "primary_composition": comp_to_str(best_comp),
+        "composition_source": "best_neighbor_mode_b",
+        "matched_sciglass_id": int(best["sciglass_id"]),
+        "distance_first": float(d_nb[0]),
+        "distance_mean_topk": float(np.mean(d_nb)),
+        "jaccard_topk": j,
+        "jaccard_label": jaccard_label(j),
+        "uncertainty_score": unc,
+        "composition_variance_neighbors": comp_var,
+        "best_neighbor_plausible": pl_b["best_neighbor_plausible"],
+        "plausible_ratio_topk": pl_b["plausible_ratio_top20"],
+        "composition_pls": comp_to_str(pd.Series(comp_pls, index=primary)),
+        "composition_xgb": comp_to_str(pd.Series(comp_xgb, index=primary)),
+        "local_pls_cv_mse": err_pls,
+        "local_xgb_cv_mse": err_xgb,
+        "disclaimer": (
+            "Состав взят из реальной записи SciGlass (ближайший сосед). "
+            "Локальные модели PLS/XGB — вспомогательная оценка, не синтез стекла."
+        ),
+        "neighbors": neighbors_table,
+    }
+
+
+def recover_from_schott_name(
+    glass_name: str,
+    *,
+    schott_xlsx: Path = DEFAULT_SCHOTT_XLSX,
+    sciglass_zip: Path = DEFAULT_SCIGLASS_ZIP,
+    k_neighbors: int = K_NEIGHBORS,
+    use_gpr: bool = False,
+) -> dict[str, Any]:
+    """Восстановить состав по марке стекла из каталога SCHOTT."""
+    schott = load_schott_catalog(schott_xlsx)
+    hit = schott[schott["glass_name"].astype(str).str.strip().str.lower() == glass_name.strip().lower()]
+    if hit.empty:
+        partial = schott[schott["glass_name"].astype(str).str.contains(glass_name, case=False, na=False)]
+        if len(partial) == 1:
+            hit = partial
+        elif len(partial) > 1:
+            names = partial["glass_name"].tolist()[:15]
+            raise ValueError(f"Неоднозначное имя «{glass_name}». Варианты: {', '.join(names)}")
+        else:
+            raise ValueError(f"Стекло «{glass_name}» не найдено в каталоге SCHOTT")
+
+    row = hit.iloc[0]
+    if pd.isna(row.get("nd")) or pd.isna(row.get("vd")):
+        raise ValueError(f"У стекла {row['glass_name']} нет nd/vd в каталоге")
+
+    out = recover_from_properties(
+        float(row["nd"]),
+        float(row["vd"]),
+        density=float(row["density"]) if pd.notna(row.get("density")) else None,
+        tg=float(row["tg"]) if pd.notna(row.get("tg")) else None,
+        label=str(row["glass_name"]),
+        sciglass_zip=sciglass_zip,
+        k_neighbors=k_neighbors,
+        use_gpr=use_gpr,
+    )
+    out["schott_catalog"] = {
+        "glass_name": str(row["glass_name"]),
+        "nd": float(row["nd"]),
+        "vd": float(row["vd"]),
+        "density": float(row["density"]) if pd.notna(row.get("density")) else None,
+        "tg": float(row["tg"]) if pd.notna(row.get("tg")) else None,
+    }
+    return out
 
 
 def primary_composition_row(row: pd.Series, primary: list[str]) -> pd.Series:

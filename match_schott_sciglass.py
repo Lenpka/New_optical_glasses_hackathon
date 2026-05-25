@@ -29,7 +29,13 @@ logger = logging.getLogger(__name__)
 
 PROJECT_DIR = Path(__file__).resolve().parent
 DEFAULT_SCHOTT_XLSX = PROJECT_DIR / "schott-optical-glass-overview-excel-format-en 202501113.xlsx"
-DEFAULT_SCIGLASS_ZIP = Path(r"C:/Users/user/AppData/Local/GlassPy/GlassPy/data/select_SciGK.csv.zip")
+_BUNDLED_SCIGLASS = PROJECT_DIR / "data" / "select_SciGK.csv.zip"
+_GLASSPY_SCIGLASS = Path(r"C:/Users/user/AppData/Local/GlassPy/GlassPy/data/select_SciGK.csv.zip")
+DEFAULT_SCIGLASS_ZIP = (
+    _BUNDLED_SCIGLASS
+    if _BUNDLED_SCIGLASS.is_file()
+    else _GLASSPY_SCIGLASS
+)
 DEFAULT_OUTPUT = PROJECT_DIR / "output" / "schott_match"
 
 # SCHOTT (каталог) -> SciGlass (select_SciGK)
@@ -326,6 +332,8 @@ def plot_property_space(
     """PCA и UMAP: положение SCHOTT среди SciGlass."""
     import matplotlib.pyplot as plt
 
+    from viz_presentation import plot_pca_property_space
+
     try:
         import umap
     except ImportError:
@@ -334,24 +342,12 @@ def plot_property_space(
     fig_dir = output_dir / "figures"
     fig_dir.mkdir(parents=True, exist_ok=True)
 
-    Z_all = sciglass_z.to_numpy()
-    pca = PCA(n_components=2, random_state=42)
-    sg_pca = pca.fit_transform(Z_all)
-    sh_pca = pca.transform(schott_z.to_numpy())
-
-    fig, ax = plt.subplots(figsize=(12, 9))
-    ax.scatter(sg_pca[:, 0], sg_pca[:, 1], s=4, alpha=0.15, c="#348ABD", label="SciGlass")
-    ax.scatter(sh_pca[:, 0], sh_pca[:, 1], s=80, c="#A60628", edgecolors="k", label="SCHOTT", zorder=5)
-    for i, name in enumerate(schott.loc[schott_z.index, "glass_name"]):
-        ax.annotate(name, (sh_pca[i, 0], sh_pca[i, 1]), fontsize=7, alpha=0.85)
-    ax.set_xlabel(f"PC1 ({pca.explained_variance_ratio_[0]:.1%})")
-    ax.set_ylabel(f"PC2 ({pca.explained_variance_ratio_[1]:.1%})")
-    ax.set_title("PCA: пространство свойств (z-score)")
-    ax.legend()
-    ax.grid(alpha=0.25)
-    fig.tight_layout()
-    fig.savefig(fig_dir / "pca_schott_sciglass.png", dpi=150)
-    plt.close(fig)
+    plot_pca_property_space(
+        schott.loc[schott_z.index],
+        schott_z,
+        sciglass_z,
+        fig_dir / "pca_schott_sciglass.png",
+    )
 
     if umap is not None and len(Z_all) > 500:
         idx = np.random.default_rng(42).choice(len(Z_all), size=min(25000, len(Z_all)), replace=False)

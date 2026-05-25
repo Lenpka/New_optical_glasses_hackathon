@@ -216,4 +216,42 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
-/Видео
+
+# === Glass hackathon: тяжёлые артефакты ===
+
+# Большие бинарные модели и данные (>10 MB / превышают GitHub лимит)
+*.joblib
+*.parquet
+*.pt
+*.pth
+*.zip
+AtMol.csv
+
+# Папки с обученными моделями
+models/
+models_oxides/
+models_oxides_wt/
+
+# Артефакты NSGA / GAN
+output/gan_design/checkpoints/
+output/gan_design/gan_raw_generated.csv
+output/gan_design/all_gan_candidates.csv
+output/inverse_design*/forward_models/
+output/inverse_design*/all_pareto_candidates.csv
+output/inverse_design*/design_space_high_n_pb_free.csv
+output/inverse_design_tg_aug/
+
+# Релизные архивы и локальные данные
+dist/
+data/
+
+# IDE / Cursor state, terminals
+.git_backup/
+.cursor/
+terminals/
+
+# Видео и крупные ассеты
+/Видео/
+*.mp4
+*.mov
+
